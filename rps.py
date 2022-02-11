@@ -4,9 +4,9 @@ from matplotlib import pyplot as plt
 class RPS:
     # 0=Rock, 1=Scissors, 2=Paper
     rewards = np.array([
-        [0, 2, -1],
-        [-2, 0, 2],
-        [1, -2, 0]
+        [0, 1, -1],
+        [-1, 0, 1],
+        [1, -1, 0]
     ])
 
 class Player:
@@ -58,5 +58,5 @@ class Game:
         plt.plot(history)
         plt.show()
     
-g = Game(10000)
+g = Game(20000)
 g.play_game()
