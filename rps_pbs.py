@@ -19,18 +19,19 @@ class Player:
     
     def update_action(self):
         positive_regret = self.regret_sum.clip(0)
-        norm_regret = positive_regret/np.sum(positive_regret)
+        msum = np.sum(positive_regret)
+        norm_regret = positive_regret/msum if msum > 0 else np.ones(len(self.rewards))/len(self.rewards)
         self.strategy = norm_regret
         self.strategy_sum += norm_regret
 
     def get_action(self):
         return np.random.choice(len(self.strategy), p=self.strategy)
 
-    def add_regret(self, opp_action):
-        reward = self.rewards[:, opp_action]
+    def add_regret(self, opp_strategy):
+        lfunc = lambda x: opp_strategy.dot(x)
+        reward = lfunc(self.rewards)
         counterfacts = reward.dot(self.strategy)
         self.regret_sum += (reward - counterfacts)
-        self.update_action()
         print(self.regret_sum)
 
 class Game:
@@ -50,18 +51,15 @@ class Game:
             self.p1_gain += RPS.rewards[a1, a2]
             self.p2_gain += RPS.rewards[a2, a1]
             print('p1 chose {}, p2 chose {}'.format(a1, a2))
-            self.p1.add_regret(a2)
-            self.p2.add_regret(a1)
+            self.p1.add_regret(self.p2.strategy)
+            self.p2.add_regret(self.p1.strategy)
+            self.p1.update_action()
+            self.p2.update_action()
             history[i, 0] = self.p1.strategy_sum[1]/self.p1.strategy_sum.sum()
             history[i, 1] = self.p2.strategy_sum[1]/self.p2.strategy_sum.sum()
         print('result: {}, {}'.format(self.p1_gain, self.p2_gain))
-        plt.figure()
         plt.plot(history)
-        
-        cummean = np.cumsum(history, axis=0)/np.arange(1, len(history)+1)[:, None]
-        plt.figure()
-        plt.plot(cummean)
         plt.show()
     
-g = Game(2000)
+g = Game(20000)
 g.play_game()
